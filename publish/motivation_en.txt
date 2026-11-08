@@ -1,7 +1,0 @@
-I got tired of tracking a pile of interdependent settings by hand — especially when you change filament all the time. So I made a small workaround that at least makes life a bit easier.
-
-Part of this logic already exists in OrcaSlicer, but not for every line type.
-
-The idea is that for good print quality the speeds of different line types should not differ too much from each other. Taking it further: to keep a balance between quality and speed, it makes sense to set a dependency between line speeds using the outer wall speed as the base. The outer wall defines how the finished part looks, and when tuning a print people lean on it first.
-
-That is why this mini-plugin exists: in its settings you can enter an averaged dependency of line speeds on the base outer perimeter speed, based on your own experience and tests.

@@ -13,7 +13,6 @@ permissions:
   contents: read
 
 env:
-  PLUGIN_SOURCE: publish/easy_speed_slider_any.py
   PLUGIN_FILES: dist/easy_speed_slider_any.py
 
 jobs:
@@ -36,16 +35,15 @@ jobs:
             echo "::error::Release tag v$version does not match the plugin version $manifest"
             exit 1
           fi
-          if ! cmp -s speed_slider.py "$PLUGIN_SOURCE"; then
-            echo "::error::$PLUGIN_SOURCE is out of sync with speed_slider.py; copy the source over it before tagging"
-            exit 1
-          fi
+
+      - name: Check plugin syntax
+        run: python3 -m py_compile speed_slider.py
 
       - name: Prepare release files
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp "$PLUGIN_SOURCE" "$PLUGIN_FILES"
+          cp speed_slider.py "$PLUGIN_FILES"
 
       - name: Publish release to OrcaCloud
         run: |
