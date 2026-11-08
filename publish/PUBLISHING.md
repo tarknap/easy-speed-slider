@@ -178,48 +178,23 @@ Slider for the outer wall speed; per-row multipliers relative to the wall (or ab
 notes saved per preset; bilingual RU/EN interface.
 ```
 
-## Публикация из GitHub (опционально, без токенов)
+## Публикация из GitHub (без токенов)
 
-Если положишь плагин в репозиторий, можно публиковать версии релизами: Edit plugin →
-GitHub publishing → `owner/repository` → Connect, затем добавить workflow
-`.github/workflows/publish-orcacloud.yml` (из официальной документации):
+Репозиторий: `https://github.com/tarknap/easy-speed-slider`. Workflow уже лежит в
+`.github/workflows/publish-orcacloud.yml`.
 
-```yaml
-name: Publish to OrcaCloud
-on:
-  release:
-    types: [published]
-permissions:
-  id-token: write
-  contents: read
-env:
-  PLUGIN_FILES: "dist/easy_speed_slider_any.py"
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Publish release to OrcaCloud
-        run: |
-          set -euo pipefail
-          oidc_token="$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=orcacloud" | jq -r .value)"
-          version="${GITHUB_REF_NAME#v}"
-          changelog="$(jq -r '.release.body // ""' "$GITHUB_EVENT_PATH" | head -c 4000)"
-          metadata="$(jq -cn --arg version "$version" --arg changelog "$changelog" \
-            '{version: $version} + (if $changelog == "" then {} else {changelog: $changelog} end)')"
-          args=(-F "metadata=$metadata")
-          shopt -s nullglob
-          for file in $PLUGIN_FILES; do args+=(-F "files=@$file"); done
-          status="$(curl -sS -o response.json -w '%{http_code}' \
-            -H "Authorization: Bearer $oidc_token" "${args[@]}" \
-            https://api.orcaslicer.com/api/v1/plugin-publish/releases)"
-          cat response.json; echo
-          [ "$status" = "201" ]
-```
+1. В OrcaCloud: **Edit plugin → GitHub publishing** → `tarknap/easy-speed-slider` → **Connect**.
+2. В GitHub создай релиз с тегом `v0.7.1` (черновик уже подготовлен) и нажми **Publish release**.
+3. Workflow проверит, что тег совпадает с версией в манифесте, что
+   `publish/easy_speed_slider_any.py` синхронизирован с `speed_slider.py`, и отправит файл в
+   OrcaCloud. Дальше обновление подхватится в OrcaSlicer через облако.
 
-Тег релиза должен быть semver выше текущей версии (`v0.6.2` и т.д.), файлы — с тем же
-OS-суффиксом в имени.
+Если тег не совпадает с версией в `speed_slider.py` или publish-файл устарел — workflow упадёт
+с понятной ошибкой, ничего не публикуя.
+
+Актуальный workflow — `.github/workflows/publish-orcacloud.yml` (проверка версии, подготовка
+`dist/` и отправка в `api.orcaslicer.com`). Тег релиза должен быть semver выше текущей
+опубликованной версии, файл — с OS-суффиксом в имени (`_any`).
 
 ## Перед публикацией — что проверить самому
 

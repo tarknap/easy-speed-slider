@@ -240,3 +240,7 @@ node tests/page_test.js
 
 Рядом с установленным плагином в `orca_plugins\_subscribed\...` также лежат бэкапы
 `cloud_plugin-....py.0.7.0.bak` и `.install_state.json.0.7.0.bak`.
+
+## Лицензия
+
+MIT — см. [LICENSE](LICENSE).
