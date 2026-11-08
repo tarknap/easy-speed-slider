@@ -22,7 +22,7 @@
    - добавь **Plugin Image** — `easy_speed_slider_icon.png`;
    - Name подставится из файла (`Easy Speed Slider`), можно поправить;
    - вставь описание (ниже);
-   - Version: `0.7.1`;
+   - Version: `0.7.2`;
    - Type: **Script** (в таксономии OrcaCloud сейчас только Script, Slicing-pipeline,
      Resource textures, Resource printer assets — отдельного «Pages» нет; вкладка ESS
      при этом работает как обычно, тип влияет только на фильтры в Hub);
@@ -168,6 +168,8 @@ or is pinned to its own absolute value in mm/s.
 **Changelog:**
 
 ```
+0.7.2 — first release published from GitHub; plugin code is the same as 0.7.1.
+The repository adds the OrcaCloud publishing workflow and MIT license.
 0.7.1 — volumetric flow check: estimates the per-role speed limit from the filament's max
 volumetric speed, line width, layer height and flow ratios; highlights rows the slicer will cap.
 Also adds the speedometer icon to the ESS tab.
@@ -184,7 +186,7 @@ notes saved per preset; bilingual RU/EN interface.
 `.github/workflows/publish-orcacloud.yml`.
 
 1. В OrcaCloud: **Edit plugin → GitHub publishing** → `tarknap/easy-speed-slider` → **Connect**.
-2. В GitHub создай релиз с тегом `v0.7.1` (черновик уже подготовлен) и нажми **Publish release**.
+2. В GitHub создай релиз с тегом `v0.7.2` (или следующей версии) и нажми **Publish release**.
 3. Workflow проверит, что тег совпадает с версией в манифесте, что
    `publish/easy_speed_slider_any.py` синхронизирован с `speed_slider.py`, и отправит файл в
    OrcaCloud. Дальше обновление подхватится в OrcaSlicer через облако.
