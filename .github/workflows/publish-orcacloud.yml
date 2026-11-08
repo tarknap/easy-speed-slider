@@ -1,0 +1,66 @@
+name: Publish to OrcaCloud
+
+# Публикация в OrcaCloud по релизу GitHub.
+# Перед первым запуском в OrcaCloud: Edit plugin -> GitHub publishing ->
+# owner/repository -> Connect (под тем же аккаунтом, что и в OrcaSlicer).
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  PLUGIN_SOURCE: publish/easy_speed_slider_any.py
+  PLUGIN_FILES: dist/easy_speed_slider_any.py
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify tag matches the plugin manifest
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          manifest="$(sed -n 's/^# version = "\(.*\)"$/\1/p' speed_slider.py | head -n1)"
+          if [ -z "$manifest" ]; then
+            echo "::error::Cannot find '# version = \"...\"' in speed_slider.py"
+            exit 1
+          fi
+          if [ "$manifest" != "$version" ]; then
+            echo "::error::Release tag v$version does not match the plugin version $manifest"
+            exit 1
+          fi
+          if ! cmp -s speed_slider.py "$PLUGIN_SOURCE"; then
+            echo "::error::$PLUGIN_SOURCE is out of sync with speed_slider.py; copy the source over it before tagging"
+            exit 1
+          fi
+
+      - name: Prepare release files
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp "$PLUGIN_SOURCE" "$PLUGIN_FILES"
+
+      - name: Publish release to OrcaCloud
+        run: |
+          set -euo pipefail
+          oidc_token="$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=orcacloud" | jq -r .value)"
+          version="${GITHUB_REF_NAME#v}"
+          changelog="$(jq -r '.release.body // ""' "$GITHUB_EVENT_PATH" | head -c 4000)"
+          metadata="$(jq -cn --arg version "$version" --arg changelog "$changelog" \
+            '{version: $version} + (if $changelog == "" then {} else {changelog: $changelog} end)')"
+          args=(-F "metadata=$metadata")
+          shopt -s nullglob
+          for file in $PLUGIN_FILES; do args+=(-F "files=@$file"); done
+          status="$(curl -sS -o response.json -w '%{http_code}' \
+            -H "Authorization: Bearer $oidc_token" "${args[@]}" \
+            https://api.orcaslicer.com/api/v1/plugin-publish/releases)"
+          cat response.json; echo
+          [ "$status" = "201" ]
